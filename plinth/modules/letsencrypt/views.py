@@ -34,6 +34,7 @@ from plinth.errors import ActionError
 from plinth.modules import letsencrypt
 from plinth.modules import names
 from plinth.modules.config import config
+from plinth.signals import letsencrypt_cert_obtained, letsencrypt_cert_revoked
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,8 @@ def revoke(request, domain):
             request, _('Certificate successfully revoked for domain {domain}.'
                        'This may take a few moments to take effect.')
             .format(domain=domain))
+        letsencrypt_cert_revoked.send_robust(
+            sender='letsencrypt', domain=domain)
     except ActionError as exception:
         messages.error(
             request,
@@ -75,6 +78,8 @@ def obtain(request, domain):
             request, _('Certificate successfully obtained for domain {domain}')
             .format(domain=domain))
         successful_obtain = True
+        letsencrypt_cert_obtained.send_robust(
+            sender='letsencrypt', domain=domain)
     except ActionError as exception:
         messages.error(
             request,
